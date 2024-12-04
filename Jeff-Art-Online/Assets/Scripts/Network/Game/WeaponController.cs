@@ -1,9 +1,10 @@
 using Fusion;
+using System.Collections;
 using UnityEngine;
 
 public class WeaponController : NetworkBehaviour, IBeforeUpdate
 {
-    public float LocalAngle { get ; private set; }
+    public float LocalAngle { get; private set; }
 
     [Header("Aim Parameters")]
     [SerializeField] private Camera localCamera;
@@ -18,10 +19,22 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
 
     [Networked] private float RotationAngle { get; set; }
     [Networked] private TickTimer ShootCooldown { get; set; }
+    [SerializeField] float reloadTime;
+    [SerializeField] int bulletAmount = 10;
+    [SerializeField] int currentBullet;
+    [SerializeField] bool isReloading = false;
+
+    void Start()
+    {
+        currentBullet = bulletAmount;
+    }
 
     public void Update()
     {
         IsFiring |= Input.GetButton("Fire1");
+
+
+
     }
 
     public void BeforeUpdate()
@@ -45,8 +58,12 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
         {
             RotationAngle = data.gunRotation;
             gunPivot.rotation = Quaternion.Euler(0, 0, RotationAngle);
-
             CheckShootInput(data);
+            CheckReloadInput(data);
+            if (isReloading == true)
+            {
+                StartCoroutine(ReloadTime());
+            }
         }
     }
 
@@ -54,18 +71,37 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
     {
         if (HasStateAuthority && ShootCooldown.ExpiredOrNotRunning(Runner))
         {
-            if (data.networkButtons.IsSet(PlayerNetworkController.InputButtons.Shoot))
+            if (data.networkButtons.IsSet(PlayerNetworkController.InputButtons.Shoot) && currentBullet != 0)
             {
                 ShootCooldown = TickTimer.CreateFromSeconds(Runner, rateOfFire);
-
+                currentBullet--;
                 Runner.Spawn(bulletPrefab,
                     bulletSpawn.position,
                     bulletSpawn.rotation,
                     Object.InputAuthority,
-                    (runner, obj) => { 
-                        obj.GetComponent<BulletController>().Direction = root.localScale.x; 
+                    (runner, obj) =>
+                    {
+                        obj.GetComponent<BulletController>().Direction = root.localScale.x;
                     });
             }
         }
+
+
+    }
+    private void CheckReloadInput(PlayerData data)
+    {
+        if (HasStateAuthority)
+        {
+            if (data.networkButtons.IsSet(PlayerNetworkController.InputButtons.Reload))
+            {
+                isReloading = true;
+            }
+        }
+    }
+    IEnumerator ReloadTime()
+    {
+        yield return new WaitForSeconds(reloadTime);
+        currentBullet = bulletAmount;
+        isReloading = false;
     }
 }

@@ -8,7 +8,8 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
     public enum InputButtons
     {
         Jump = 0b1, // 1
-        Shoot = 0b10, // 2
+        Shoot = 0b10, // 2'
+        Reload = 0b100,
     }
 
     [SerializeField] private float moveSpeed = 5f;
@@ -83,6 +84,7 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
             playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
             playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
+            playerData.networkButtons.Set(InputButtons.Reload, Input.GetKey(KeyCode.R));
             playerData.gunRotation = WeaponController.LocalAngle;
         }
     }
