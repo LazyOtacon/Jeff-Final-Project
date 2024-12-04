@@ -16,6 +16,8 @@ public class BulletController : NetworkBehaviour
     [Networked] private NetworkBool HitObject { get; set; }
     [Networked, HideInInspector] public float Direction { get; set; }
 
+    [field: SerializeField] public PlayerUIController UIController { get; private set; }
+
     private List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
 
     public override void Spawned()
@@ -75,12 +77,14 @@ public class BulletController : NetworkBehaviour
                 bool hitSelf = player.InputAuthority.PlayerId == Object.InputAuthority.PlayerId;
                 if (!hitSelf)
                 {
-                    if (Runner.IsServer)
+                    if (player.GetComponentInChildren<PlayerUIController>().IsDead == false)
                     {
-                        player.GetComponentInChildren<PlayerUIController>().ReducePlayerHealthRpc(damage);
+                        if (Runner.IsServer)
+                        {
+                            player.GetComponentInChildren<PlayerUIController>().ReducePlayerHealthRpc(damage);
+                        }
+                        HitObject = true;
                     }
-
-                    HitObject = true;
                     break;
                 }
             }

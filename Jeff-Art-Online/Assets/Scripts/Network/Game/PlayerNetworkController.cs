@@ -52,17 +52,18 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
     public override void FixedUpdateNetwork()
     {
-        if (GetInput(out PlayerData data))
-        { 
-            body.velocity = new Vector3(data.horizontalInput * moveSpeed, body.velocity.y, 0);
-
-            if (canJump && data.networkButtons.IsSet(InputButtons.Jump))
+            if (GetInput(out PlayerData data))
             {
-                body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            }
-        }
+                body.velocity = new Vector3(data.horizontalInput * moveSpeed, body.velocity.y, 0);
 
-        SpriteController.UpdateFacing(body.velocity);
+                if (canJump && data.networkButtons.IsSet(InputButtons.Jump))
+                {
+                    body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                }
+            }
+
+            SpriteController.UpdateFacing(body.velocity);
+        
     }
 
     private void PerformGroundCheck()
@@ -77,13 +78,16 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
     public void BeforeUpdate()
     {
-        if (Object.HasInputAuthority)
+        if (UIController.IsDead == false)
         {
-            playerData.horizontalInput = Input.GetAxis("Horizontal");
+            if (Object.HasInputAuthority)
+            {
+                playerData.horizontalInput = Input.GetAxis("Horizontal");
 
-            playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
-            playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
-            playerData.gunRotation = WeaponController.LocalAngle;
+                playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
+                playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
+                playerData.gunRotation = WeaponController.LocalAngle;
+            }
         }
     }
 
