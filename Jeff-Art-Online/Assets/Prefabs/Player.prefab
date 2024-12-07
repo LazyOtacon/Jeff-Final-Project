@@ -1289,6 +1289,10 @@ MonoBehaviour:
     RawGuidValue: 0b3940e3d65514b47acfe461c133f103
   bulletSpawn: {fileID: 7054002493532811151}
   rateOfFire: 0.2
+  reloadTime: 5
+  bulletAmount: 6
+  currentBullet: 0
+  isReloading: 0
 --- !u!114 &5827576792513491986
 MonoBehaviour:
   m_ObjectHideFlags: 0
