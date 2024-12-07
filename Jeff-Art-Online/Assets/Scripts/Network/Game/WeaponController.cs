@@ -20,11 +20,11 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
     [Networked] private float RotationAngle { get; set; }
     [Networked] private TickTimer ShootCooldown { get; set; }
     [SerializeField] float reloadTime;
-    [SerializeField] int bulletAmount = 10;
+    [SerializeField] int bulletAmount;
     [SerializeField] int currentBullet;
-    [SerializeField] bool isReloading = false;
+    [SerializeField] bool isReloading;
 
-    void Start()
+    void Awake()
     {
         currentBullet = bulletAmount;
     }
@@ -33,8 +33,10 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
     {
         IsFiring |= Input.GetButton("Fire1");
 
-
-
+        if (isReloading)
+        {
+            Invoke("ReloadTime", reloadTime);
+        }
     }
 
     public void BeforeUpdate()
@@ -60,10 +62,7 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
             gunPivot.rotation = Quaternion.Euler(0, 0, RotationAngle);
             CheckShootInput(data);
             CheckReloadInput(data);
-            if (isReloading == true)
-            {
-                StartCoroutine(ReloadTime());
-            }
+
         }
     }
 
@@ -98,10 +97,12 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
             }
         }
     }
-    IEnumerator ReloadTime()
+    void ReloadTime()
     {
-        yield return new WaitForSeconds(reloadTime);
-        currentBullet = bulletAmount;
-        isReloading = false;
+        if (isReloading)
+        {
+            currentBullet = bulletAmount;
+            isReloading = false;
+        }
     }
 }
