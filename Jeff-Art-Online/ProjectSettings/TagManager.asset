@@ -7,6 +7,7 @@ TagManager:
   - Death
   - Respawner
   - Spawnpoint
+  - deathzone
   layers:
   - Default
   - TransparentFX

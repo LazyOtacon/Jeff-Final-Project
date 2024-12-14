@@ -154,4 +154,14 @@ public class PlayerUIController : NetworkBehaviour
     {
         CurrentHealth -= amount;
     }
+
+    // New method: Trigger detection
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("deathzone"))
+        {
+            Debug.Log("Player entered a death zone. Setting health to 0 and triggering respawn.");
+            ReducePlayerHealthRpc(300); // Reduce health to 0
+        }
+    }
 }
