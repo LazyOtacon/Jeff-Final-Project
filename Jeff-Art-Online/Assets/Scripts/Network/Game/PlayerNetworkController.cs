@@ -54,20 +54,23 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
     public override void FixedUpdateNetwork()
     {
-            if (GetInput(out PlayerData data))
-            {
-                body.velocity = new Vector3(data.horizontalInput * moveSpeed, body.velocity.y, 0);
+        if (GetInput(out PlayerData data))
+        {
+            // Movement logic
+            body.velocity = new Vector2(data.horizontalInput * moveSpeed, body.velocity.y);
 
-                if (canJump && data.networkButtons.IsSet(InputButtons.Jump))
+            // Jump logic
+            if (canJump && data.networkButtons.IsSet(InputButtons.Jump))
+            {
+                if (Mathf.Abs(body.velocity.y) < 0.1f) // Ensures jump only applies when the vertical velocity is minimal
                 {
                     body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-                    thisAudioManager.PlaySFX(thisAudioManager.playerJump);   
-                    
+                    thisAudioManager.PlaySFX(thisAudioManager.playerJump);
                 }
             }
+        }
 
-            SpriteController.UpdateFacing(body.velocity);
-        
+        SpriteController.UpdateFacing(body.velocity);
     }
 
     private void PerformGroundCheck()
@@ -82,17 +85,17 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
     public void BeforeUpdate()
     {
-        if (UIController.IsDead == false)
+        if (!UIController.IsDead && Object.HasInputAuthority)
         {
-            if (Object.HasInputAuthority)
-            {
-                playerData.horizontalInput = Input.GetAxis("Horizontal");
+            playerData.horizontalInput = Input.GetAxis("Horizontal");
 
-                playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
-                playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
-                playerData.networkButtons.Set(InputButtons.Reload, Input.GetKeyDown(KeyCode.R));
-                playerData.gunRotation = WeaponController.LocalAngle;
-            }
+            // Map Jump, Shoot, and Reload inputs to playerData.networkButtons
+            playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
+            playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
+            playerData.networkButtons.Set(InputButtons.Reload, Input.GetKeyDown(KeyCode.R));
+
+            // Update WeaponController's gun rotation
+            playerData.gunRotation = WeaponController.LocalAngle;
         }
     }
 

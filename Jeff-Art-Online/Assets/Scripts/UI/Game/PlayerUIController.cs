@@ -1,4 +1,6 @@
 using Fusion;
+using System;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -22,6 +24,7 @@ public class PlayerUIController : NetworkBehaviour
     [Networked, HideInInspector] public NetworkString<_16> PlayerName { get; private set; }
 
     [Networked, HideInInspector] public Vector2 Respawnpos { get; private set; }
+    public bool IsOwner { get; private set; }
 
     private ChangeDetector changeDetector;
     private AudioManager thisAudioManager;
@@ -44,7 +47,7 @@ public class PlayerUIController : NetworkBehaviour
 
             if (HasInputAuthority) // Only affect the current player's "Death" object
             {
-                Death.SetActive(false);
+                //Death.SetActive(false);
                 Debug.Log("Death object has been set to inactive for the current player.");
             }
         }
@@ -90,8 +93,23 @@ public class PlayerUIController : NetworkBehaviour
             CurrentHealth = MAX_HEALTH;
             thisAudioManager.PlaySFX(thisAudioManager.playerDeath);
             ToggleDeathObjectForOwner();
-            DisableBodyForAllPlayersmessageRpc();
 
+            // Only send the RPC if we have the right authority
+            if (HasInputAuthority)
+            {
+                // Call RPC to disable body for all players if the player has input authority
+                DisableBodyForAllPlayersmessageRpc();
+            }
+            else if (IsOwner) // This ensures that the server can also trigger the RPC
+            {
+                DisableBodyForAllPlayersmessageRpc();
+            }
+            else
+            {
+                Debug.LogWarning("No input authority or state authority to send RPC.");
+            }
+
+            // Invoke actions
             Invoke("ToggleDeathObjectForOwner", 3f);
             Invoke("DisableBodyForAllPlayersmessageRpc", 3f);
         }
@@ -100,9 +118,19 @@ public class PlayerUIController : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void DisableBodyForAllPlayersmessageRpc()
     {
-        this.gameObject.transform.position = Respawnpos;
-        DisableBodyForAllPlayersRpc();
+        // Ensure we're sending the RPC only when the object has the appropriate authority
+        if (HasInputAuthority || IsOwner)
+        {
+            // Proceed with the RPC logic
+            this.gameObject.transform.position = Respawnpos;
+            DisableBodyForAllPlayersRpc();
+        }
+        else
+        {
+            Debug.LogWarning("RPC call to DisableBodyForAllPlayersmessageRpc was rejected due to missing input or state authority.");
+        }
     }
+
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void DisableBodyForAllPlayersRpc()
@@ -123,14 +151,25 @@ public class PlayerUIController : NetworkBehaviour
     {
         if (HasInputAuthority) // Check if this is the owner's screen
         {
-
             if (Death != null)
             {
-                
-                bool isCurrentlyActive = Death.activeSelf;
-                Death.SetActive(!isCurrentlyActive); // Toggle the active state
-                IsDead = !IsDead;
-                Debug.Log($"Death object has been toggled to: {!isCurrentlyActive}");
+                // Get the Image component on the Death object
+                Image deathImage = Death.GetComponent<Image>();
+
+                if (deathImage != null)
+                {
+                    bool isCurrentlyEnabled = deathImage.enabled;
+
+                    // Toggle the enabled state of the Image component
+                    deathImage.enabled = !isCurrentlyEnabled;
+                    IsDead = !isCurrentlyEnabled;
+
+                    Debug.Log($"Death object Image component has been toggled to: {!isCurrentlyEnabled}");
+                }
+                else
+                {
+                    Debug.LogWarning("Death object does not have an Image component.");
+                }
             }
             else
             {
@@ -139,12 +178,9 @@ public class PlayerUIController : NetworkBehaviour
         }
     }
 
-
-
-        private void OnPlayerNameChanged()
+    private void OnPlayerNameChanged()
     {
         playerNameText.text = PlayerName.ToString();
-
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
