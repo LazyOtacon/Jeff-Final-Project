@@ -25,6 +25,7 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
     [field: SerializeField] public PlayerUIController UIController { get; private set; }
 
     private Rigidbody2D body;
+    private AudioManager thisAudioManager;
     private bool canJump = false;
 
     private PlayerData playerData;
@@ -32,7 +33,7 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
     public override void Spawned()
     {
         body = GetComponent<Rigidbody2D>();
-
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         if (Object.HasInputAuthority)
         {
             LocalCamera.SetActive(true);
@@ -60,6 +61,8 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
                 if (canJump && data.networkButtons.IsSet(InputButtons.Jump))
                 {
                     body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                    thisAudioManager.PlaySFX(thisAudioManager.playerJump);   
+                    
                 }
             }
 
@@ -87,7 +90,7 @@ public class PlayerNetworkController : NetworkBehaviour, IBeforeUpdate
 
                 playerData.networkButtons.Set(InputButtons.Jump, Input.GetButton("Jump"));
                 playerData.networkButtons.Set(InputButtons.Shoot, WeaponController.IsFiring);
-                playerData.networkButtons.Set(InputButtons.Reload, Input.GetKey(KeyCode.R));
+                playerData.networkButtons.Set(InputButtons.Reload, Input.GetKeyDown(KeyCode.R));
                 playerData.gunRotation = WeaponController.LocalAngle;
             }
         }

@@ -19,7 +19,12 @@ public class BulletController : NetworkBehaviour
     [field: SerializeField] public PlayerUIController UIController { get; private set; }
 
     private List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
+    private AudioManager thisAudioManager;
 
+    private void Awake()
+    {
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
     public override void Spawned()
     {
         LifetimeTimer = TickTimer.CreateFromSeconds(Runner, lifetime);
@@ -81,9 +86,11 @@ public class BulletController : NetworkBehaviour
                     {
                         if (Runner.IsServer)
                         {
+                            thisAudioManager.PlaySFX(thisAudioManager.playerHit);
                             player.GetComponentInChildren<PlayerUIController>().ReducePlayerHealthRpc(damage);
                         }
                         HitObject = true;
+                       
                     }
                     break;
                 }

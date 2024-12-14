@@ -24,10 +24,12 @@ public class PlayerUIController : NetworkBehaviour
     [Networked, HideInInspector] public Vector2 Respawnpos { get; private set; }
 
     private ChangeDetector changeDetector;
+    private AudioManager thisAudioManager;
 
     private void Start()
     {
         FindAndSetDeathObjectInactive();
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
     }
 
     private void FindAndSetDeathObjectInactive()
@@ -86,6 +88,7 @@ public class PlayerUIController : NetworkBehaviour
         if (CurrentHealth <= 0)
         {
             CurrentHealth = MAX_HEALTH;
+            thisAudioManager.PlaySFX(thisAudioManager.playerDeath);
             ToggleDeathObjectForOwner();
             DisableBodyForAllPlayersmessageRpc();
 
@@ -123,6 +126,7 @@ public class PlayerUIController : NetworkBehaviour
 
             if (Death != null)
             {
+                
                 bool isCurrentlyActive = Death.activeSelf;
                 Death.SetActive(!isCurrentlyActive); // Toggle the active state
                 IsDead = !IsDead;
@@ -153,6 +157,7 @@ public class PlayerUIController : NetworkBehaviour
     public void ReducePlayerHealthRpc(int amount)
     {
         CurrentHealth -= amount;
+        thisAudioManager.PlaySFX(thisAudioManager.playerHit);
     }
 
     // New method: Trigger detection

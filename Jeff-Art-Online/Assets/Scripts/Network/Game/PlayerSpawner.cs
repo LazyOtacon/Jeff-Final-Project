@@ -5,7 +5,12 @@ public class PlayerSpawner : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] NetworkPrefabRef playerPrefab = NetworkPrefabRef.Empty;
     [SerializeField] Transform[] spawnPositions;
+    private AudioManager thisAudioManager;
 
+    private void Awake()
+    {
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
     private void SpawnPlayer(PlayerRef playerRef)
     {
         int playerSpawnIndex = playerRef.PlayerId % spawnPositions.Length;
@@ -19,6 +24,7 @@ public class PlayerSpawner : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         if (Runner.IsServer)
         {
+            thisAudioManager.PlaySFX(thisAudioManager.playerJoin);
             SpawnPlayer(player);
         }
     }
@@ -29,6 +35,7 @@ public class PlayerSpawner : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             if (Runner.TryGetPlayerObject(player, out NetworkObject obj))
             {
+                thisAudioManager.PlaySFX(thisAudioManager.playerLeave);
                 Runner.Despawn(obj);
             }
 

@@ -14,6 +14,7 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
     [SerializeField] private NetworkPrefabRef bulletPrefab;
     [SerializeField] private Transform bulletSpawn;
     [SerializeField] private float rateOfFire = 0.2f;
+    private AudioManager thisAudioManager;
 
     [HideInInspector] public bool IsFiring { get; set; }
 
@@ -27,6 +28,7 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
     void Awake()
     {
         currentBullet = bulletAmount;
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
     }
 
     public void Update()
@@ -74,6 +76,7 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
             {
                 ShootCooldown = TickTimer.CreateFromSeconds(Runner, rateOfFire);
                 currentBullet--;
+                thisAudioManager.PlaySFX(thisAudioManager.gunShoot);
                 Runner.Spawn(bulletPrefab,
                     bulletSpawn.position,
                     bulletSpawn.rotation,
@@ -94,6 +97,7 @@ public class WeaponController : NetworkBehaviour, IBeforeUpdate
             if (data.networkButtons.IsSet(PlayerNetworkController.InputButtons.Reload))
             {
                 isReloading = true;
+                thisAudioManager.PlaySFX(thisAudioManager.gunReload);
             }
         }
     }

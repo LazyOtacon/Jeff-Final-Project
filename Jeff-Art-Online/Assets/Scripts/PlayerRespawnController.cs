@@ -7,9 +7,11 @@ public class PlayerRespawnController : NetworkBehaviour
     [SerializeField] private Transform[] SpawnPoints; // Array of spawn points
     [SerializeField] private float RespawnDelay = 3f; // Delay before respawning the player
     private PlayerUIController playerUIController; // Reference to PlayerUIController
+    private AudioManager thisAudioManager;
 
     private void Start()
     {
+        thisAudioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         // If the Player is already in the scene, attempt to find the PlayerUIController.
         if (Player != null)
         {
@@ -46,6 +48,7 @@ public class PlayerRespawnController : NetworkBehaviour
     {
         // Start the respawn process when the player dies
         Debug.Log("Player has died. Starting respawn process.");
+        thisAudioManager.PlaySFX(thisAudioManager.playerDeath);
         Invoke(nameof(RespawnPlayer), RespawnDelay);
     }
 

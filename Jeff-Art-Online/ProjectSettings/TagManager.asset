@@ -8,6 +8,7 @@ TagManager:
   - Respawner
   - Spawnpoint
   - deathzone
+  - Audio
   layers:
   - Default
   - TransparentFX
